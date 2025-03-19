@@ -1,0 +1,10 @@
+The main difference is the touch driver chip XPT2046
+Version 2.0
+TFT_MISO is pin 12;
+Touch_CS is pin 33.
+
+Version 2.2:
+TFT_MISO is pin 33;
+Touch_CS is pin 12.
+
+Therefore, the corresponding pin numbers need to be modified in the code, and the TFT_eSPI library also needs to be modified accordingly.

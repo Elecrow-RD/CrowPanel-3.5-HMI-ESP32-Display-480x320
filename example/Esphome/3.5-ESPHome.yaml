@@ -1,0 +1,194 @@
+esphome:
+  name: 35hmi
+  friendly_name: 3.5HMI
+
+esp32:
+  board: odroid_esp32
+  framework:
+    type: arduino
+    
+
+# Enable logging
+logger:
+  level: VERBOSE
+  logs: 
+    light.components: ERROR
+    light.output: ERROR
+    number.component: ERROR
+    ledc.output: ERROR
+    template.number: ERROR
+  baud_rate: 0
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "opyG36e78+nmZgUuENBpkJl60gkkHe9/alpljO+DxbM="
+
+ota:
+  password: "47476edb080c0ed7d13008b70660dcf0"
+
+wifi:
+  ssid: "yanfa_software"
+  password: "yanfa-123456"
+  #log_level: DEBUG
+  #fast_connect: True 
+  #reconnect_timeout: 15s
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "35Hmi Fallback Hotspot"
+    password: "6KsyZPRel0ab"
+
+captive_portal:
+
+#设置SPI引脚
+spi:
+  clk_pin: GPIO14
+  mosi_pin: GPIO13
+  interface: hardware
+  id: spiwd
+#设置背光引脚
+# Define a PWM output on the ESP32
+output:
+  - platform: ledc
+    pin: GPIO27
+    inverted: False
+    id: backlight_pwm
+#打开背光
+# Define a monochromatic, dimmable light for the backlight
+light:
+  - platform: monochromatic
+    output: backlight_pwm
+    name: "Display Backlight"
+    id: back_light
+    restore_mode: ALWAYS_ON
+#设置字体
+font:
+  - file: "gfonts://Roboto"
+    id: font4
+    size: 48
+  - file: "gfonts://Roboto"
+    id: font3
+    size: 36
+  - file: "gfonts://Roboto"
+    id: font2
+    size: 24
+  - file: "gfonts://Roboto"
+    id: font1
+    size: 12
+
+
+#定义不同颜色
+color:
+  - id: my_red
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: my_orange
+    red: 100%
+    green: 50%
+    blue: 0%
+  - id: my_yellow
+    red: 100%
+    green: 100%
+    blue: 0%
+  - id: my_green
+    red: 0%
+    green: 100%
+    blue: 0%
+  - id: my_blue
+    red: 0%
+    green: 0%
+    blue: 100%
+  - id: my_teal
+    red: 0%
+    green: 100%
+    blue: 100%
+  - id: my_gray
+    red: 70%
+    green: 70%
+    blue: 70%
+  - id: my_white
+    red: 100%
+    green: 100%
+    blue: 100%
+  - id: my_black
+    red: 0%
+    green: 0%
+    blue: 0%
+#设置I2C
+i2c:
+  sda: 22
+  scl: 21
+#设置tsl2561传感器，DHT22温湿度传感器
+sensor:
+  - platform: tsl2561
+    name: "TSL2561 Ambient Light"
+    id: TSL2561
+    address: 0x29
+    update_interval: 2s
+  - platform: dht
+    pin: 25
+    temperature:
+      name: "HMI-24 Temperature"
+      id: temperature24
+    humidity:
+      id: humidity24
+      name: "HMI-24 Humidity"
+    update_interval: 5s
+    model: DHT22
+#引入UI素材文件 
+image:
+  - file: "light.png"
+    id: on_light
+    resize: 50x50
+    type: RGB24
+  - file: "small_hum.png"
+    id: small_hum
+    resize: 50x75
+    type: RGB24
+  - file: "small_logo.png"
+    id: small_logo
+    resize: 250x52
+    type: RGB24
+  - file: "small_off.png"
+    id: small_off
+    resize: 50x75
+    type: RGB24
+  - file: "small_temp.png"
+    id: small_temp
+    resize: 50x75
+    type: RGB24
+  - file: "no_light.png"
+    id: no_light
+    resize: 50x50
+    type: RGB24
+#设置显示器并显示UI 
+display:
+  - platform: ili9xxx
+    id: lcd_display
+    model: ILI9488_A
+    spi_id: spiwd
+    data_rate: 20MHz
+    cs_pin: GPIO15
+    dc_pin: GPIO2
+    
+    spi_mode: mode0   #since no cs pin default is mode0
+    dimensions: 
+      height: 320
+      width: 480
+    invert_colors: False
+    lambda: |- 
+        it.fill(id(my_white));
+        it.image(100, 10, id(small_logo));
+        it.image(85, 180, id(on_light));
+        it.image(240, 160, id(small_temp));
+        it.image(380, 160, id(small_hum));
+        it.printf(90, 240, id(font2), id(my_black), "%.1f", id(TSL2561).state);
+        it.printf(245, 240, id(font2), id(my_black), "%.1f", id(temperature24).state);
+        it.printf(385, 240, id(font2), id(my_black), "%.1f", id(humidity24).state);
+
+time:
+  - platform: sntp
+    id: time_comp
+
+
