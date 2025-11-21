@@ -6,9 +6,17 @@
 
 |      | Hardware | Software | Remark |
 | ---- | -------- | -------- | ------ |
-| 1    | V2.2     | V2.0     | latest |
+| 1    | V1.0     | V1.0     | latest |
+| 1    | V1.1     | V1.0     | latest |
+| 1    | V2.0     | V1.0     | latest |
+| 1    | V2.2     | V2.2     | latest |
 
-### 3, product information
+**Version 2.0** upgrades the automatic download feature from Version 1.0.
+**Version 2.2** modifies two pins based on Version 2.0. The following modifications are required:
+#define TFT_MISO 33
+#define TOUCH_CS 12
+
+### 3, product informatio
 
 - Model: 3.5 inches module-CrowPanel ESP32 display
 - Main Processor: ESP32-WROVER-B
