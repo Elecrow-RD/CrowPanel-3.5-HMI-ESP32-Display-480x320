@@ -12,6 +12,7 @@
 | 1    | V2.2     | V2.2     | latest |
 
 **Version 2.0** upgrades the automatic download feature from Version 1.0.
+
 **Version 2.2** modifies two pins based on Version 2.0. The following modifications are required:
 #define TFT_MISO 33
 #define TOUCH_CS 12
