@@ -1,3 +1,7 @@
+
+##### Note: For the two firmware files above, if the screen hardware version is 2.2, please use the firmware (LVGL_Arduino3.5RTP-Hor-2.2). For other versions, use (HMI3.5_factory_firmware).
+
+
 # How to install the factory demo firmware with flash download tool?
 
 #### 1.Preparation:
