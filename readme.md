@@ -73,8 +73,7 @@ C:\Users\Documents\Arduino\libraries\
 
 2.In the IDF plug-in, select the port, then compile and flash
 
-![5](https://github.com/user-attachments/assets/76b6182f-0998-4496-920d-d262a5142df3)
-
+<img width="930" height="587" alt="image" src="https://github.com/user-attachments/assets/da5e23ff-ba9e-4899-8c9a-16436d3b8cbb" />
 
 
 ##### PlatformIO starts
