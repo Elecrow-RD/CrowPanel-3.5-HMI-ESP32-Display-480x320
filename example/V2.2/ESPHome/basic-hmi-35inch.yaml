@@ -1,0 +1,236 @@
+esphome:
+  name: basic-hmi-35inch
+  platformio_options:
+    build_flags: "-DBOARD_HAS_PSRAM"
+    board_build.esp-idf.memory_type: qio_opi
+    board_build.flash_mode: dio
+  friendly_name: Basic_HMI_3.5inch
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+psram:
+  mode: quad
+  speed: 80MHz
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "a/GlTK39FHKhf3WQqe0FIbrHIRQ+HRMYRQaRKIj7pIQ="
+
+ota:
+  - platform: esphome
+    password: "e468a4ee6c34878f77f04e0850afb464"
+
+wifi:
+  ssid: "ThinkNode-G4_2a2d82"
+  password: "elecrow.com"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Basic-Hmi-35Inch"
+    password: "S8EOSGdtn8ZT"
+
+captive_portal:
+
+# ----- GPIO25 LED Switch -----
+switch:
+  - platform: gpio                 # Use GPIO switch platform
+    pin: GPIO25                    # LED connected to GPIO25
+    id: led_switch                 # Internal ID
+    name: "External LED"           # Display name in ESPHome
+    restore_mode: RESTORE_DEFAULT_OFF  # Restore to OFF after reboot
+
+# ----- PWM Output (Backlight) -----
+output:
+  - platform: ledc                 # Use ESP32 LEDC PWM output
+    pin: GPIO27                    # Backlight PWM output pin
+    inverted: False                # Normal output (not inverted)
+    id: backlight_pwm              # PWM output ID
+
+# ----- Display Backlight -----
+light:
+  - platform: monochromatic        # Monochrome light component
+    output: backlight_pwm          # Bind to PWM output
+    name: "Display Backlight"      # Display name
+    id: back_light                 # Internal ID
+    restore_mode: ALWAYS_ON        # Turn on automatically after reboot
+
+# ----- Fonts -----
+font:
+  - file: "gfonts://Roboto"        # Google Roboto font
+    id: font4                      # Font ID
+    size: 48                       # Font size
+  - file: "gfonts://Roboto"
+    id: font3
+    size: 36
+  - file: "gfonts://Roboto"
+    id: font2
+    size: 24
+  - file: "gfonts://Roboto"
+    id: font1
+    size: 12
+
+# ----- I2C Bus (DHT20) -----
+i2c:
+  sda: GPIO22                      # SDA pin
+  scl: GPIO21                      # SCL pin
+  scan: true                       # Scan for I2C devices during boot
+
+# ----- Sensor -----
+sensor:
+  - platform: aht10                # Use AHT10/AHT20 platform
+    variant: AHT20                 # Specify AHT20 sensor
+    address: 0x38                  # I2C address
+    temperature:
+      name: "HMI-35 Temperature"   # Temperature sensor name
+      id: temperature35            # Temperature sensor ID
+    humidity:
+      name: "HMI-35 Humidity"      # Humidity sensor name
+      id: humidity35               # Humidity sensor ID
+    update_interval: 5s            # Update every 5 seconds
+
+# ----- SPI Bus (Shared by Display and Touchscreen) -----
+spi:
+  - id: spi_bus                    # SPI bus ID
+    clk_pin: GPIO14                # SPI clock pin
+    mosi_pin: GPIO13               # SPI MOSI pin
+    miso_pin: GPIO33               # SPI MISO pin
+    interface: hardware            # Use hardware SPI
+
+# ----- Touchscreen (XPT2046) -----
+touchscreen:
+  platform: xpt2046                # XPT2046 touch controller
+  id: my_touch                     # Touchscreen ID
+  spi_id: spi_bus                  # Use shared SPI bus
+  cs_pin: GPIO12                   # Chip Select pin (modify according to your wiring)
+  #interrupt_pin: GPIO36           # Optional T_IRQ pin for faster response
+  update_interval: 50ms            # Touch scan interval
+  threshold: 400                   # Touch pressure threshold
+  calibration:                     # Touch calibration parameters
+    x_min: 280                     # Raw X minimum
+    x_max: 3860                    # Raw X maximum
+    y_min: 340                     # Raw Y minimum
+    y_max: 3860                    # Raw Y maximum
+  transform:                       # Coordinate transformation
+    mirror_x: true                 # Mirror X-axis
+    mirror_y: false                # Do not mirror Y-axis
+    swap_xy: false                 # Do not swap X and Y axes
+  on_touch:                        # Trigger when screen is touched
+    - lambda: |-
+        ESP_LOGI("touch", "x=%d, y=%d, x_raw=%d, y_raw=%d",
+            touch.x,
+            touch.y,
+            touch.x_raw,
+            touch.y_raw);
+    - if:
+        condition:
+          and:
+            - lambda: 'return (touch.x >= 280 && touch.x <= 310);'   # X coordinate range
+            - lambda: 'return (touch.y >= 235 && touch.y <= 265);'   # Y coordinate range
+        then:
+          - switch.toggle: led_switch    # Toggle LED switch
+
+# ----- Image Resources -----
+image:
+  - file: "light.png"              # LED ON icon
+    id: on_light                   # Image ID
+    resize: 50x50                  # Resize image
+    type: RGB565                   # Image color format
+  - file: "small_hum.png"          # Humidity icon
+    id: small_hum
+    resize: 50x75
+    type: RGB565
+  - file: "small_logo.png"         # Logo image
+    id: small_logo
+    resize: 250x52
+    type: RGB565
+  - file: "small_off.png"          # LED OFF icon
+    id: small_off
+    resize: 50x75
+    type: RGB565
+  - file: "small_temp.png"         # Temperature icon
+    id: small_temp
+    resize: 50x75
+    type: RGB565
+  - file: "no_light.png"           # Light OFF image
+    id: no_light
+    resize: 50x50
+    type: RGB565
+
+# ----- Colors -----
+color:
+  - id: my_red                     # Red
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: my_orange                  # Orange
+    red: 100%
+    green: 50%
+    blue: 0%
+  - id: my_yellow                  # Yellow
+    red: 100%
+    green: 100%
+    blue: 0%
+  - id: my_green                   # Green
+    red: 0%
+    green: 100%
+    blue: 0%
+  - id: my_blue                    # Blue
+    red: 0%
+    green: 0%
+    blue: 100%
+  - id: my_teal                    # Cyan
+    red: 0%
+    green: 100%
+    blue: 100%
+  - id: my_gray                    # Gray
+    red: 70%
+    green: 70%
+    blue: 70%
+  - id: my_white                   # White
+    red: 100%
+    green: 100%
+    blue: 100%
+  - id: my_black                   # Black
+    red: 0%
+    green: 0%
+    blue: 0%
+
+# ----- Display -----
+display:
+  - platform: ili9xxx              # ILI9XXX display driver
+    id: lcd_display                # Display ID
+    model: ILI9488_A               # Display controller model
+    spi_id: spi_bus                # Use shared SPI bus
+    data_rate: 20MHz               # SPI communication speed
+    spi_mode: mode0                # SPI mode
+    cs_pin: GPIO15                 # Chip Select pin
+    dc_pin: GPIO2                  # Data/Command pin
+    reset_pin: GPIO4               # Important! ILI9488 usually requires a reset pin
+    dimensions: 480x320            # Display resolution
+    invert_colors: false           # Do not invert colors
+    color_order: bgr               # Color order
+    lambda: |-
+      it.fill(id(my_white));                           // Fill background with white
+      it.image(100, 10, id(small_logo));               // Draw logo
+      
+      // Switch the icon according to the LED state
+      if (id(led_switch).state) {
+        it.image(85, 180, id(on_light));               // Draw ON icon
+        it.printf(90, 240, id(font2), id(my_black), "ON");   // Display ON text
+      } else {
+        it.image(85, 180, id(no_light));               // Draw OFF icon
+        it.printf(90, 240, id(font2), id(my_black), "OFF");  // Display OFF text
+      }
+      
+      it.image(240, 160, id(small_temp));              // Draw temperature icon
+      it.image(380, 160, id(small_hum));               // Draw humidity icon
+      it.printf(245, 240, id(font2), id(my_black), "%.1f", id(temperature35).state);  // Display temperature
+      it.printf(385, 240, id(font2), id(my_black), "%.1f", id(humidity35).state);     // Display humidity
+    
