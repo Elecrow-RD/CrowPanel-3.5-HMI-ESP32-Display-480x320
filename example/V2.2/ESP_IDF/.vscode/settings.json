@@ -1,0 +1,16 @@
+{
+  "idf.flashType": "UART",
+  "idf.portWin": "COM40",
+  "idf.openOcdConfigs": [
+    "board/esp32-wrover-kit-3.3v.cfg"
+  ],
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32"
+  },
+  "clangd.path": "C:\\Espressif\\tools\\esp-clang\\esp-19.1.2_20250312\\esp-clang\\bin\\clangd.exe",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=e:\\AI_Course\\tina-Basic\\LVGL_IDF_35\\build"
+  ]
+}
